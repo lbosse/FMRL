@@ -1,0 +1,75 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+.navbar#main {
+  justify-content: flex-start;
+}
+
+.navbar-toggler {
+  margin: 0 10px 0 0;
+}
+
+.navbar-brand img {
+  margin-right: 10px;
+}
+
+.username {
+  padding-right: 16px; 
+}
+
+form.login, form.register {
+  padding: 110px 16px 16px 16px;
+  max-width: 400px;
+  margin: auto;
+}
+
+form.msgr {
+  padding: 3px;
+  position: fixed;
+  bottom: 10px;
+  width: 100%;
+}
+
+form.msgr input.form-control {
+  margin: 0;
+  float: left;
+  width: calc(100% - 110px);
+}
+
+form.msgr input:focus {
+  outline: none;
+}
+
+form.msgr button.btn {
+  width: 80px;
+  border: none;
+  margin: 1px 0;
+}
+
+#messages {
+  list-style-type: none;
+  margin: 0;
+  padding: 80px 0 0 0;
+  display: block;
+  height: calc(100% - 56px);
+  overflow-y: scroll;
+  font-family: Courier
+}
+
+#messages li {
+  padding: 5px 10px;
+  display: block;
+  overflow-wrap: break-word;
+}
+
+#messages li:nth-child(odd) {
+  background: #eee;
+}
+
