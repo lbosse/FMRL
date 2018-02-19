@@ -17,7 +17,8 @@ $(function () {
   });
 
   $('form.join').submit(function() {
-    window.location = '/room/'+$('#room').val();
+    window.location = '/room/'+$('#room').val().replace(/ /g,"_");
+    return false;
   });
 
   //Handle onload
@@ -29,11 +30,23 @@ $(function () {
     print('Welcome to FMRL. Type /help for a list of commands.', 'system');
   });
 
+  socket.on('join', function(msg) {
+    print(msg, 'system');
+  });
+
+  socket.on('unjoin', function(msg) {
+    print(msg, 'system');
+  });
+
   //handle messages
   $('form.msgr').submit(function() {
     let val = $('#m').val();
     if(val.length > 0) {
-      socket.emit('chat message', {message: val, room: window.location.pathname});
+      if(val[0] == '/') {
+        socket.emit('cmd', {cmd: val, room: window.location.pathname});
+      } else {
+        socket.emit('chat message', {message: val, room: window.location.pathname});
+      }
       print(val, 'message');
     }
     $('#m').val('');
@@ -42,6 +55,18 @@ $(function () {
 
  socket.on('chat message', function(msg) {
    print(msg, 'info');
+ });
+
+ socket.on('cmd', function(cmd) {
+   console.log(cmd);
+   if(cmd.success) {
+      print(cmd.res, 'system');
+      if(cmd.args[0] == '/join') {
+        window.location = '/room/'+cmd.channel;
+      }
+   } else {
+      print(cmd.res, 'error');
+   }
  });
 
 });
