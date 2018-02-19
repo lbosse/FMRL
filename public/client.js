@@ -94,11 +94,11 @@ function print(msg, type) {
 }
 
 function printSystem(printable) {
-  $('#messages').append($('<li class="text-success">').text(printable));
+  $('#messages').append($('<li class="text-success">').html(printable));
 }
 
 function printError(printable) {
-  $('#messages').append($('<li class="text-danger">').text(printable));
+  $('#messages').append($('<li class="text-danger">').html(printable));
 
 }
 

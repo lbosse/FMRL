@@ -27,7 +27,7 @@ module.exports = (socket) => {
         socket.emit('cmd', {args: args});
         break;
       case '/help':
-        socket.emit('cmd', {args: args});
+        help(args, socket);
         break;
       case '/stats':
         socket.emit('cmd', {args: args});
@@ -73,3 +73,18 @@ let join = (args, socket) => {
   socket.emit('cmd', { args: args, res: resp, success: success, channel: channel });
   
 };
+
+let help = (args, socket) => {
+  let resp = "";
+  resp  = "<br />--------------------------------------------------------";
+  resp += "<br />FMRL V1.0";
+  resp += "<br />--------------------------------------------------------";
+  resp += "<br />/help";
+  resp += "<br />----Shows this prompt";
+  resp += "<br />/join <channel...>";
+  resp += "<br />----Joins the specified channel";
+  resp += "<br />/nick <nickname>";
+  resp += "<br />----Sets the users nickname to the specified value";
+  let success = true;
+  socket.emit('cmd', { args: args, res: resp, success: success });
+}
