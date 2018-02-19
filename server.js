@@ -9,6 +9,8 @@ const expSession      = require('express-session');
 const session         = expSession(config.session);
 const memStore        = require('memorystore')(expSession);
 const ioSession       = require('express-socket.io-session');
+const morgan          = require('morgan'); // SETUP NEEDED  
+const userCont        = require('controllers/user');
 
 const forceSSL        = require('./util/forceSSL');
 const connection      = require('./util/connection');
@@ -32,7 +34,6 @@ if(process.env.NODE_ENV === 'production') {
 }
 
 app.use(session);
-io.use(ioSession(session, { autoSave: true}));
 
 //Login Page
 app.get('/', (req, res) => {
@@ -40,7 +41,22 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
-  //TODO: handle login
+  userCont.getUser(req.body).then((user) => {
+    /*
+    if(!user) {
+      login.auth = false;
+      login.msg = 'User "' + userData.email() +'" does not exist.';
+    } else if(hashPass(userData).password == user.password) {
+      login.auth = true;
+      login.msg = 'Login success!';
+    } else {
+      login.auth = false;
+      login.msg = 'Incorrect password.';
+    }
+    res.json(login);
+    */
+    console.log(user);
+    res.send(200);
 });
 
 //Register Page
@@ -53,7 +69,15 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
-  //TODO: handle register
+  userCont.createUser(req.body).then((outcome) => {
+    /*
+    if (outcome.created) {
+      res.json(201, outcome.msg);
+    } else {
+      res.json(200, outcome.msg);
+    }
+    */
+    res.send(200);
 });
 
 //Room Page
