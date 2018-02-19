@@ -9,8 +9,12 @@ const expSession      = require('express-session');
 const session         = expSession(config.session);
 const memStore        = require('memorystore')(expSession);
 const ioSession       = require('express-socket.io-session');
+
 const forceSSL        = require('./util/forceSSL');
+const connection      = require('./util/connection');
+
 const port            = process.env.PORT || process.argv[2] || 3000;
+const nsps            = {};
 
 let store;
 
@@ -54,13 +58,23 @@ app.post('/register', (req, res) => {
 
 //Room Page
 app.get('/room*', (req, res) => {
-  if(req.session.user) {
-    res.sendFile(__dirname + 'public/room.html');
-  } else {
+  
+  //if(req.session.user) {
+    
+    let room = req.params[0];
+    
+    if(!nsps[room]) {
+      nsps[room] = io.of(room);
+      nsps[room].on('connection', connection);
+    }
+    
+    res.sendFile(__dirname + '/public/room.html');
+
+  /*} else {
     res.redirect(
       [req.headers['x-forwarded-proto'], req.get('Host'), req.url].join('')
     );
-  }
+  }*/
 });
 
 app.get('/logout', (req, res) => {
