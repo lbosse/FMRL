@@ -10,7 +10,7 @@ const session         = expSession(config.session);
 const memStore        = require('memorystore')(expSession);
 const ioSession       = require('express-socket.io-session');
 const morgan          = require('morgan'); // SETUP NEEDED  
-const userCont        = require('controllers/user');
+const userCont        = require('./controllers/user');
 
 const forceSSL        = require('./util/forceSSL');
 const connection      = require('./util/connection');
@@ -42,7 +42,6 @@ app.get('/', (req, res) => {
 
 app.post('/', (req, res) => {
   userCont.getUser(req.body).then((user) => {
-    /*
     if(!user) {
       login.auth = false;
       login.msg = 'User "' + userData.email() +'" does not exist.';
@@ -54,9 +53,8 @@ app.post('/', (req, res) => {
       login.msg = 'Incorrect password.';
     }
     res.json(login);
-    */
-    console.log(user);
-    res.send(200);
+    res.json(user);
+  });
 });
 
 //Register Page
@@ -69,30 +67,68 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
-  userCont.createUser(req.body).then((outcome) => {
-    /*
-    if (outcome.created) {
-      res.json(201, outcome.msg);
+  var reginfo = {created: false, msg: ''};
+  userCont.getUser(req.body).then((user) => {
+    if(!user) {
+      var uobj = {
+        email: req.body.email, 
+        name: req.body.name,
+        nick: '',
+        password: req.body.password,  
+        active: true
+      };
+
+      if(!userCont.validEmail(uobj)) {
+        reginfo.msg = 'Not a valid email.';
+        req.session.reginfo = reginfo;
+        req.session.registerForm = uobj;
+        res.redirect('/register');
+        return;
+      }
+      else if(!userCont.validPw(uobj)) {
+        reginfo.msg = 'Not a valid password.';
+        req.session.reginfo = reginfo;
+        req.session.registerForm = uobj;
+        res.redirect('/register');
+        return;
+      }
+      else if(uobj.password != req.body.passwordMatch) {
+        reginfo.msg = 'Passwords do not match.';
+        req.session.reginfo = reginfo;
+        req.session.registerForm = uobj;
+        res.redirect('/register');
+        return;
+      } else {
+        uobj = userCont.hashPass(uobj);
+        userCont.createUser(uobj).save((err, createdUser) => {
+          reginfo.created = true;
+          reginfo.msg = 'User created!';
+          res.redirect('/register');
+          return;
+        });
+      }
     } else {
-      res.json(200, outcome.msg);
+      reginfo.msg = 'User already exists!';
+      req.session.reginfo = reginfo;
+      res.redirect('/register');
+      return;
     }
-    */
-    res.send(200);
+  });
 });
 
 //Room Page
 app.get('/room*', (req, res) => {
-  
+
   //if(req.session.user) {
-    
-    let room = req.params[0];
-    
-    if(!nsps[room]) {
-      nsps[room] = io.of(room);
-      nsps[room].on('connection', connection);
-    }
-    
-    res.sendFile(__dirname + '/public/room.html');
+
+  let room = req.params[0];
+
+  if(!nsps[room]) {
+    nsps[room] = io.of(room);
+    nsps[room].on('connection', connection);
+  }
+
+  res.sendFile(__dirname + '/public/room.html');
 
   /*} else {
     res.redirect(

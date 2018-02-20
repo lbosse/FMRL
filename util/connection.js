@@ -36,7 +36,7 @@ module.exports = (socket) => {
   });
 
   socket.on('load', () => {
-    io.to(socket.id).emit('load', {user: 'user object here eventually'};
+    io.to(socket.id).emit('load', {user: 'user object here eventually'});;
   });
 
   socket.on('disconnect', () => {});
