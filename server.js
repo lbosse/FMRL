@@ -41,19 +41,18 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
-  userCont.getUser(req.body).then((user) => {
+  var login = {user: null, auth: false, msg: ''};
+  userCont.getUserByEmail(req.body.email).then((user) => {
     if(!user) {
-      login.auth = false;
-      login.msg = 'User "' + userData.email() +'" does not exist.';
-    } else if(hashPass(userData).password == user.password) {
+      login.msg = 'User "' + req.body.email +'" does not exist.';
+    } else if(userCont.hashPass(req.body).password == user.password) {
+      login.user = user;
       login.auth = true;
       login.msg = 'Login success!';
     } else {
-      login.auth = false;
       login.msg = 'Incorrect password.';
     }
     res.json(login);
-    res.json(user);
   });
 });
 
@@ -68,7 +67,7 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
   var reginfo = {created: false, msg: ''};
-  userCont.getUser(req.body).then((user) => {
+  userCont.getUserByEmail(req.body.email).then((user) => {
     if(!user) {
       var uobj = {
         email: req.body.email, 
