@@ -119,15 +119,23 @@ app.post('/register', (req, res) => {
 app.get('/room*', (req, res) => {
 
   //if(req.session.user) {
+    let room = req.params[0];
 
-  let room = req.params[0];
+    if(room.indexOf(' ') >= 0) {
+      room = room.replace(/ /g,"_");
+      res.redirect(
+        [req.headers['x-forwarded-proto'], req.get('Host'), '/room', room].join('')
+      );
+      return;
+    }
 
-  if(!nsps[room]) {
-    nsps[room] = io.of(room);
-    nsps[room].on('connection', connection);
-  }
-
-  res.sendFile(__dirname + '/public/room.html');
+    
+    if(!nsps[room]) {
+      nsps[room] = io.of(room);
+      nsps[room].on('connection', connection);
+    }
+    
+    res.sendFile(__dirname + '/public/room.html');
 
   /*} else {
     res.redirect(

@@ -69,7 +69,7 @@ form.msgr button.btn {
   overflow-wrap: break-word;
 }
 
-#messages li:nth-child(odd) {
+/*#messages li:nth-child(odd) {
   background: #eee;
-}
+}*/
 

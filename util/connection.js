@@ -1,43 +1,90 @@
 module.exports = (socket) => {
 
-  let user = socket.handshake.session.user;
+  //let user = socket.handshake.session.user ? socket.handshake.session.user : {};
 
-  socket.emit('join', 'someone joined the room!');
+  socket.broadcast.emit('join', 'someone joined the room!');
 
-  socket.on('chat message', (id, msg) => {
-    socket.broadcast.to(id).emit('chat message', msg);
+  socket.on('chat message', (msg) => {
+    socket.broadcast.emit('chat message', msg.message);
   });
 
   socket.on('cmd', (msg) => {
-    let args = msg.split(/[ ,]+/).filter(Boolean);
+    let args = msg.cmd.split(/[ ,]+/).filter(Boolean);
     switch(args[0]) {
+      case '/join':
+        join(args, socket);
+        break;
       case '/nick':
-        socket.to(socket.id).emit('cmd', {args: args});
+        nickname(args, socket);
         break;
       case '/list':
-        socket.to(socket.id).emit('cmd', {args: args});
+        socket.emit('cmd', {args: args});
         break;
       case '/leave':
-        socket.to(socket.id).emit('cmd', {args: args});
+        socket.emit('cmd', {args: args});
         break;
       case '/quit':
-        socket.to(socket.id).emit('cmd', {args: args});
+        socket.emit('cmd', {args: args});
         break;
       case '/help':
-        socket.to(socket.id).emit('cmd', {args: args});
+        help(args, socket);
         break;
       case '/stats':
-        socket.to(socket.id).emit('cmd', {args: args});
+        socket.emit('cmd', {args: args});
         break;
       default:
-        socket.to(socket.id).emit('cmd', {args: args});
+        socket.emit('cmd', {args: args});
         break;
     }
   });
 
   socket.on('load', () => {
-    io.to(socket.id).emit('load', {user: 'user object here eventually'});;
+    socket.emit('load', {user: 'user object here eventually'});
   });
 
-  socket.on('disconnect', () => {});
+  socket.on('disconnect', () => {
+    socket.broadcast.emit('unjoin', 'someone has left the room!');
+  });
 };
+
+let nickname = (args, socket) => {
+  let resp = "";
+  let success = false;
+  if(args.length != 2) {
+    resp += "invalid args! try /nick <nickname>";
+  } else {
+    resp += "Nickname successfully changed to "+args[1];
+    success = true;
+  }
+  socket.emit('cmd', { args: args, res: resp, success: success });
+};
+
+let join = (args, socket) => {
+  let resp = "";
+  let success = false;
+  let channel = "";
+  if(args.length < 2) {
+    resp += "invalid args! try /join [<channel> ...]";
+  } else {
+    channel = args.slice(1, args.length).join('_');
+    resp += "Joining channel "+channel+"...";
+    success = true;
+  }
+  socket.emit('cmd', { args: args, res: resp, success: success, channel: channel });
+  
+};
+
+let help = (args, socket) => {
+  let resp = "";
+  resp  = "<br />--------------------------------------------------------";
+  resp += "<br />FMRL V1.0";
+  resp += "<br />--------------------------------------------------------";
+  resp += "<br />/help";
+  resp += "<br />----Shows this prompt";
+  resp += "<br />/join <channel...>";
+  resp += "<br />----Joins the specified channel";
+  resp += "<br />/nick <nickname>";
+  resp += "<br />----Sets the users nickname to the specified value";
+  let success = true;
+  socket.emit('cmd', { args: args, res: resp, success: success });
+}
