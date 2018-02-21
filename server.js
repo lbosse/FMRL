@@ -6,7 +6,7 @@ const http            = require('http').Server(app);
 const io              = require('socket.io')(http);
 const uuid            = require('uuid/v4');
 const expSession      = require('express-session');
-const session         = expSession(config.session);
+//const session         = expSession(config.session); // uses unsafe default store
 const memStore        = require('memorystore')(expSession);
 const ioSession       = require('express-socket.io-session');
 const morgan          = require('morgan'); // SETUP NEEDED  
@@ -33,7 +33,10 @@ if(process.env.NODE_ENV === 'production') {
   store = new memStore(config.express.dev.store);
 }
 
-app.use(session);
+// Configure sessions
+var sessionConfig = config.session;
+sessionConfig.store = store; 
+app.use(expSession(sessionConfig));
 
 //Login Page
 app.get('/', (req, res) => {
