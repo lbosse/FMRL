@@ -55,16 +55,18 @@ app.post('/', (req, res) => {
     if(!user) {
       login.msg = 'User "' + req.body.email +'" does not exist.';
       req.session.login = login;
+      res.redirect('/');
     } else if(userCont.hashPass(req.body).password == user.password) {
       login.user = user;
       login.auth = true;
       login.msg = 'Login success!';
       req.session.login = login;
+      res.redirect('/room/'+req.session.uuid);
     } else {
       login.msg = 'Incorrect password.';
       req.session.login = login;
+      res.redirect('/');
     }
-    res.json(login);
   });
 });
 
