@@ -37,6 +37,8 @@ app.use(session);
 
 //Login Page
 app.get('/', (req, res) => {
+  var login = {user: null, auth: false, msg: ''};
+  req.session.login = login;
   res.sendFile(__dirname + '/public/index.html');
 });
 
@@ -45,12 +47,15 @@ app.post('/', (req, res) => {
   userCont.getUserByEmail(req.body.email).then((user) => {
     if(!user) {
       login.msg = 'User "' + req.body.email +'" does not exist.';
+      req.session.login = login;
     } else if(userCont.hashPass(req.body).password == user.password) {
       login.user = user;
       login.auth = true;
       login.msg = 'Login success!';
+      req.session.login = login;
     } else {
       login.msg = 'Incorrect password.';
+      req.session.login = login;
     }
     res.json(login);
   });
@@ -58,7 +63,7 @@ app.post('/', (req, res) => {
 
 //Register Page
 app.get('/register', (req, res) => {
-  if(req.session.user) {
+  if(req.session.login.user) {
     res.redirect('/room/'+req.session.uuid);
   } else {
     res.sendFile(__dirname + '/public/register.html');
@@ -66,7 +71,7 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
-  var reginfo = {created: false, msg: ''};
+  var login = {user: null, auth: false, msg: ''};
   userCont.getUserByEmail(req.body.email).then((user) => {
     if(!user) {
       var uobj = {
@@ -78,37 +83,38 @@ app.post('/register', (req, res) => {
       };
 
       if(!userCont.validEmail(uobj)) {
-        reginfo.msg = 'Not a valid email.';
-        req.session.reginfo = reginfo;
+        login.msg = 'Not a valid email.';
+        req.session.login = login;
         req.session.registerForm = uobj;
         res.redirect('/register');
         return;
       }
       else if(!userCont.validPw(uobj)) {
-        reginfo.msg = 'Not a valid password.';
-        req.session.reginfo = reginfo;
+        login.msg = 'Not a valid password.';
+        req.session.login = login;
         req.session.registerForm = uobj;
         res.redirect('/register');
         return;
       }
       else if(uobj.password != req.body.passwordMatch) {
-        reginfo.msg = 'Passwords do not match.';
-        req.session.reginfo = reginfo;
+        login.msg = 'Passwords do not match.';
+        req.session.login = login;
         req.session.registerForm = uobj;
         res.redirect('/register');
         return;
       } else {
         uobj = userCont.hashPass(uobj);
         userCont.createUser(uobj).save((err, createdUser) => {
-          reginfo.created = true;
-          reginfo.msg = 'User created!';
-          res.redirect('/register');
+          login.user = uobj;
+          login.auth = true;
+          login.msg = 'User created!';
+          res.redirect('/room/'+req.session.uuid);
           return;
         });
       }
     } else {
-      reginfo.msg = 'User already exists!';
-      req.session.reginfo = reginfo;
+      login.msg = 'User already exists!';
+      req.session.login = login;
       res.redirect('/register');
       return;
     }
@@ -118,7 +124,7 @@ app.post('/register', (req, res) => {
 //Room Page
 app.get('/room*', (req, res) => {
 
-  //if(req.session.user) {
+  if(req.session.login.user) {
     let room = req.params[0];
 
     if(room.indexOf(' ') >= 0) {
@@ -137,11 +143,11 @@ app.get('/room*', (req, res) => {
     
     res.sendFile(__dirname + '/public/room.html');
 
-  /*} else {
+  } else {
     res.redirect(
       [req.headers['x-forwarded-proto'], req.get('Host'), req.url].join('')
     );
-  }*/
+  }
 });
 
 app.get('/logout', (req, res) => {
