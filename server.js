@@ -35,7 +35,7 @@ if(process.env.NODE_ENV === 'production') {
 
 // Configure sessions
 var sessionConfig = config.session;
-sessionConfig.store = store; 
+sessionConfig.store = store; // This feels wrong???
 app.use(expSession(sessionConfig));
 
 //Login Page
@@ -43,8 +43,10 @@ app.get('/', (req, res) => {
   if (!req.session.login) {
     var login = {user: null, auth: false, msg: ''};
     req.session.login = login;
+    res.sendFile(__dirname + '/public/index.html');
+  } else {
+    res.redirect('/room/'+req.session.uuid);
   }
-  res.sendFile(__dirname + '/public/index.html');
 });
 
 app.post('/', (req, res) => {
