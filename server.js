@@ -37,8 +37,10 @@ app.use(session);
 
 //Login Page
 app.get('/', (req, res) => {
-  var login = {user: null, auth: false, msg: ''};
-  req.session.login = login;
+  if (!req.session.login) {
+    var login = {user: null, auth: false, msg: ''};
+    req.session.login = login;
+  }
   res.sendFile(__dirname + '/public/index.html');
 });
 
