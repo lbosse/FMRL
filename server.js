@@ -61,6 +61,7 @@ app.post('/', (req, res) => {
       login.auth = true;
       login.msg = 'Login success!';
       req.session.login = login;
+      req.session.uuid = uuid();
       res.redirect('/room/'+req.session.uuid);
     } else {
       login.msg = 'Incorrect password.';
@@ -117,6 +118,8 @@ app.post('/register', (req, res) => {
           login.user = uobj;
           login.auth = true;
           login.msg = 'User created!';
+          req.session.login = login;
+          req.session.uuid = uuid();
           res.redirect('/room/'+req.session.uuid);
           return;
         });
