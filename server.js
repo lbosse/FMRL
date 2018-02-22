@@ -148,6 +148,7 @@ app.get('/room*', (req, res) => {
     res.sendFile(__dirname + '/public/room.html');
 
   } else {
+    console.log([req.headers['x-forwarded-proto'], req.get('Host'), req.url].join(''));
     res.redirect(
       [req.headers['x-forwarded-proto'], req.get('Host'), req.url].join('')
     );
