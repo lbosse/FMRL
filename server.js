@@ -132,6 +132,7 @@ app.post('/register', (req, res) => {
 
 //Room Page
 app.get('/room*', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
 
   if(req.session.login.user) {
     let room = req.params[0];
