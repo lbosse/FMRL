@@ -33,7 +33,7 @@ if(process.env.NODE_ENV === 'production') {
 }
 
 // Configure sessions
-let sessionConfig = Object.assign({store: sessionStore}, config.session);
+let sessionConfig = Object.assign({}, {store: sessionStore}, config.session);
 // Below we get a TypeError: Converting circular structure to JSON
 //console.log('session config options: ' + JSON.stringify(sessionConfig));
 app.use(expSession(sessionConfig));
