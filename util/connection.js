@@ -1,10 +1,10 @@
 module.exports = (socket) => {
 
-  //let user = socket.handshake.session.user ? socket.handshake.session.user : {};
-  socket.broadcast.emit('join', socket.id+' joined the room!');
+  let user = socket.handshake.session.user ? socket.handshake.session.user : {};
+  socket.broadcast.emit('join', user.name+' joined the room!');
 
   socket.on('chat message', (msg) => {
-    socket.broadcast.emit('chat message', socket.id + ": " + msg.message);
+    socket.broadcast.emit('chat message', user.name + ": " + msg.message);
   });
 
   socket.on('cmd', (msg) => {
@@ -38,7 +38,7 @@ module.exports = (socket) => {
   });
 
   socket.on('load', () => {
-    socket.emit('load', {user: { name: socket.id }});
+    socket.emit('load', {user: socket.handshake.session.user});
   });
 
   socket.on('disconnect', () => {

@@ -36,7 +36,8 @@ if(process.env.NODE_ENV === 'production') {
 let sessionConfig = Object.assign({}, {store: sessionStore}, config.session);
 // Below we get a TypeError: Converting circular structure to JSON
 //console.log('session config options: ' + JSON.stringify(sessionConfig));
-app.use(expSession(sessionConfig));
+let session = expSession(sessionConfig);
+app.use(session);
 
 module.exports = io;
 
@@ -145,6 +146,7 @@ app.get('/room*', (req, res) => {
     if(!nsps[room]) {
       nsps[room] = io.of(room);
       nsps[room].on('connection', connection);
+      nsps[room].use(ioSession(session, { autoSave: true }));
     }
     
     res.sendFile(__dirname + '/public/room.html');
