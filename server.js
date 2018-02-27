@@ -122,7 +122,7 @@ app.post('/register', (req, res) => {
 //Room Page
 app.get('/room*', (req, res) => {
   // Caching of the room page is diabled to log out properly
-  //res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
 
   // Log user to console - not logged when back button is pushed
   console.log(req.session.user);
