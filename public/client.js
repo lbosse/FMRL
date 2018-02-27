@@ -3,6 +3,7 @@ $(function () {
     window.location.pathname.substr(window.location.pathname.lastIndexOf('/'))
   );
   let socket = io(room);
+  let username = "";
   
   //Handle focusing and clicking functionality for major components
   $('#room').val(room.substr(1));
@@ -25,6 +26,7 @@ $(function () {
   socket.emit('load', {});
   socket.on('load', function(res) {
     if(res.user) {
+      username = res.user.name;
       $('.username').text(res.user.name);
     }
     print('Welcome to FMRL. Type /help for a list of commands.', 'system');
@@ -47,7 +49,7 @@ $(function () {
       } else {
         socket.emit('chat message', {message: val, room: window.location.pathname});
       }
-      print(val, 'message');
+      print(username + ": " + val, 'message');
     }
     $('#m').val('');
     return false;

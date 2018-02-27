@@ -38,6 +38,8 @@ let sessionConfig = Object.assign({}, {store: sessionStore}, config.session);
 //console.log('session config options: ' + JSON.stringify(sessionConfig));
 app.use(expSession(sessionConfig));
 
+module.exports = io;
+
 //Login Page
 app.get('/', (req, res) => {
   if (req.session.user == undefined) {
