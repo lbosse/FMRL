@@ -6,9 +6,12 @@ const http            = require('http').Server(app);
 const io              = require('socket.io')(http);
 const uuid            = require('uuid/v4');
 const expSession      = require('express-session');
-const memStore        = require('memorystore')(expSession);
-const ioSession       = require('express-socket.io-session');
+//const memStore        = require('memorystore')(expSession);
+//const ioSession       = require('express-socket.io-session');
 const morgan          = require('morgan'); // SETUP NEEDED  
+const redisAdapter    = require('socket.io-redis');
+const redisStore     = require('connect-redis')(expSession);
+
 const userCont        = require('./controllers/user');
 
 const forceSSL        = require('./util/forceSSL');
@@ -24,12 +27,16 @@ app.use(bodyParser.json());
 if(process.env.NODE_ENV === 'production') {
   app.set('trust proxy', config.express.prod.trustProxy);
   app.use(bodyParser.urlencoded(config.express.prod.bodyParser));
-  sessionStore = new memStore(config.express.prod.store);
+  //sessionStore = new memStore(config.express.prod.store);
+  sessionStore = new redisStore(config.redis.prod);
   app.use(forceSSL);
+  io.adapter(redisAdapter(config.redis.prod));
 } else {
   app.set('trust proxy', config.express.dev.trustProxy);
   app.use(bodyParser.urlencoded(config.express.dev.bodyParser));
-  sessionStore = new memStore(config.express.dev.store);
+  //sessionStore = new memStore(config.express.dev.store);
+  sessionStore = new redisStore(config.redis.dev);
+  io.adapter(redisAdapter(config.redis.dev));
 }
 
 // Configure sessions
@@ -37,6 +44,7 @@ let sessionConfig = Object.assign({}, {store: sessionStore}, config.session);
 // Below we get a TypeError: Converting circular structure to JSON
 //console.log('session config options: ' + JSON.stringify(sessionConfig));
 let session = expSession(sessionConfig);
+
 app.use(session);
 
 module.exports = io;
@@ -146,7 +154,10 @@ app.get('/room*', (req, res) => {
     if(!nsps[room]) {
       nsps[room] = io.of(room);
       nsps[room].on('connection', connection);
-      nsps[room].use(ioSession(session, { autoSave: true }));
+      //nsps[room].use(ioSession(session, { autoSave: true }));
+      nsps[room].use((socket, next) => {
+        session(socket.request, socket.request.res, next);
+      });
     }
     
     res.sendFile(__dirname + '/public/room.html');
@@ -172,9 +183,10 @@ app.get('/logout', (req, res) => {
 
 app.use(express.static('public'));
 
-//Handle sockets
-io.on('connection', (socket) => {
-  //TODO: handle sockets
+//Handle sockets on empty room
+io.on('connection', connection);
+io.use((socket, next) => {
+  session(socket.request, socket.request.res, next);
 });
 
 //Start Server

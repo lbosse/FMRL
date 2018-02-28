@@ -2,13 +2,13 @@ const User = require('../controllers/user');
 
 module.exports = (socket) => {
 
-  let user = socket.handshake.session.user ? socket.handshake.session.user : {};
+  let user = socket.request.session.user ? socket.request.session.user : {};
   let name = user.nick ? user.nick : user.name;
  
   socket.broadcast.emit('join', name + ' joined the room!');
 
   socket.on('chat message', (msg) => {
-    user = socket.handshake.session.user ? socket.handshake.session.user : {};
+    user = socket.request.session.user ? socket.request.session.user : {};
     name = user.nick ? user.nick : user.name;
     socket.broadcast.emit('chat message', name + ": " + msg.message);
   });
@@ -44,7 +44,7 @@ module.exports = (socket) => {
   });
 
   socket.on('load', () => {
-    socket.emit('load', {user: socket.handshake.session.user});
+    socket.emit('load', {user: socket.request.session.user});
   });
 
   socket.on('disconnect', () => {
@@ -56,7 +56,7 @@ let nickname = (args, socket) => {
   let resp = "";
   if(args.length != 2) {
     resp += "invalid args! try /nick &lt;nickname&gt;";
-    socket.emit('cmd', { args: args, res: resp, success: false, user: socket.handshake.session.user });
+    socket.emit('cmd', { args: args, res: resp, success: false, user: socket.request.session.user });
   } else {
     resp += "Nickname successfully changed to "+args[1];
     User.setNick(socket, args, resp);
@@ -82,8 +82,8 @@ let list = (args, socket, room) => {
   //console.log(socket.adapter.nsp.sockets);
   let resp = "<br />Current connections to the room: ";
   Object.keys(socket.adapter.nsp.sockets).forEach((k) => {
-    let name = socket.adapter.nsp.sockets[k].handshake.session.user.name;
-    let nick = socket.adapter.nsp.sockets[k].handshake.session.user.nick;
+    let name = socket.adapter.nsp.sockets[k].request.session.user.name;
+    let nick = socket.adapter.nsp.sockets[k].request.session.user.nick;
     resp += "<br />" + name + " (" + nick + ")";
   });
   socket.emit('cmd', { args: args, res: resp, success: true });
