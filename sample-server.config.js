@@ -33,7 +33,7 @@ module.exports = {
     resave: true,
     saveUninitialized: true
   },
-  db: {
+  mongo: {
     prod: {
       uri: '',
       useMongoClient: true,
