@@ -60,7 +60,6 @@ $(function () {
  });
 
  socket.on('cmd', function(cmd) {
-   console.log(cmd);
    if(cmd.success) {
       print(cmd.res, 'system');
       if(cmd.args[0] == '/join') {

@@ -6,8 +6,6 @@ const http            = require('http').Server(app);
 const io              = require('socket.io')(http);
 const uuid            = require('uuid/v4');
 const expSession      = require('express-session');
-//const memStore        = require('memorystore')(expSession);
-//const ioSession       = require('express-socket.io-session');
 const morgan          = require('morgan'); // SETUP NEEDED  
 const redisAdapter    = require('socket.io-redis');
 const redisStore     = require('connect-redis')(expSession);
@@ -27,27 +25,21 @@ app.use(bodyParser.json());
 if(process.env.NODE_ENV === 'production') {
   app.set('trust proxy', config.express.prod.trustProxy);
   app.use(bodyParser.urlencoded(config.express.prod.bodyParser));
-  //sessionStore = new memStore(config.express.prod.store);
   sessionStore = new redisStore(config.redis.prod);
   app.use(forceSSL);
   io.adapter(redisAdapter(config.redis.prod));
 } else {
   app.set('trust proxy', config.express.dev.trustProxy);
   app.use(bodyParser.urlencoded(config.express.dev.bodyParser));
-  //sessionStore = new memStore(config.express.dev.store);
   sessionStore = new redisStore(config.redis.dev);
   io.adapter(redisAdapter(config.redis.dev));
 }
 
 // Configure sessions
 let sessionConfig = Object.assign({}, {store: sessionStore}, config.session);
-// Below we get a TypeError: Converting circular structure to JSON
-//console.log('session config options: ' + JSON.stringify(sessionConfig));
 let session = expSession(sessionConfig);
 
 app.use(session);
-
-module.exports = io;
 
 //Login Page
 app.get('/', (req, res) => {
@@ -135,16 +127,12 @@ app.get('/room*', (req, res) => {
   // Caching of the room page is diabled to log out properly
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
 
-  // Log user to console - not logged when back button is pushed
-  // console.log(req.session.user);
-
   if(req.session.user != undefined) {
     let room = req.params[0];
 
     if(room.indexOf(' ') >= 0) {
       room = room.replace(/ /g,"_");
       res.redirect(
-        /* Luke - make all redirects like this */
         [req.headers['x-forwarded-proto'], req.get('Host'), '/room', room].join('')
       );
       return;
@@ -154,7 +142,6 @@ app.get('/room*', (req, res) => {
     if(!nsps[room]) {
       nsps[room] = io.of(room);
       nsps[room].on('connection', connection);
-      //nsps[room].use(ioSession(session, { autoSave: true }));
       nsps[room].use((socket, next) => {
         session(socket.request, socket.request.res, next);
       });
@@ -163,7 +150,6 @@ app.get('/room*', (req, res) => {
     res.sendFile(__dirname + '/public/room.html');
 
   } else {
-    //console.log([req.headers['x-forwarded-proto'], req.get('Host'), req.url].join(''));
     res.redirect(
       [req.headers['x-forwarded-proto'], req.get('Host'), req.url].join('')
     );
@@ -172,12 +158,6 @@ app.get('/room*', (req, res) => {
 
 app.get('/logout', (req, res) => {
   req.session.destroy();
-  // Below doesn't redirect to home
-  /*
-  res.redirect(
-    [req.headers['x-forwarded-proto'], req.get('Host'), '/'].join('')
-  );
-  */
   res.redirect('/');
 });
 

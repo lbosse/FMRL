@@ -79,7 +79,6 @@ let join = (args, socket) => {
 };
 
 let list = (args, socket, room) => {
-  //console.log(socket.adapter.nsp.sockets);
   let resp = "<br />Current connections to the room: ";
   Object.keys(socket.adapter.nsp.sockets).forEach((k) => {
     let name = socket.adapter.nsp.sockets[k].request.session.user.name;
