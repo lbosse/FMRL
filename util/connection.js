@@ -1,10 +1,16 @@
+const User = require('../controllers/user');
+
 module.exports = (socket) => {
 
   let user = socket.handshake.session.user ? socket.handshake.session.user : {};
-  socket.broadcast.emit('join', user.name+' joined the room!');
+  let name = user.nick ? user.nick : user.name;
+ 
+  socket.broadcast.emit('join', name + ' joined the room!');
 
   socket.on('chat message', (msg) => {
-    socket.broadcast.emit('chat message', user.name + ": " + msg.message);
+    user = socket.handshake.session.user ? socket.handshake.session.user : {};
+    name = user.nick ? user.nick : user.name;
+    socket.broadcast.emit('chat message', name + ": " + msg.message);
   });
 
   socket.on('cmd', (msg) => {
@@ -42,28 +48,27 @@ module.exports = (socket) => {
   });
 
   socket.on('disconnect', () => {
-    socket.broadcast.emit('unjoin', 'someone has left the room!');
+    socket.broadcast.emit('unjoin', name + ' has left the room!');
   });
 };
 
 let nickname = (args, socket) => {
   let resp = "";
-  let success = false;
   if(args.length != 2) {
-    resp += "invalid args! try /nick <nickname>";
+    resp += "invalid args! try /nick &lt;nickname&gt;";
+    socket.emit('cmd', { args: args, res: resp, success: false, user: socket.handshake.session.user });
   } else {
     resp += "Nickname successfully changed to "+args[1];
-    success = true;
+    User.setNick(socket, args, resp);
   }
-  socket.emit('cmd', { args: args, res: resp, success: success });
-};
+}
 
 let join = (args, socket) => {
   let resp = "";
   let success = false;
   let channel = "";
   if(args.length < 2) {
-    resp += "invalid args! try /join [<channel> ...]";
+    resp += "invalid args! try /join [&lt;channel&gt; ...]";
   } else {
     channel = args.slice(1, args.length).join('_');
     resp += "Joining channel "+channel+"...";
@@ -74,9 +79,12 @@ let join = (args, socket) => {
 };
 
 let list = (args, socket, room) => {
+  //console.log(socket.adapter.nsp.sockets);
   let resp = "<br />Current connections to the room: ";
   Object.keys(socket.adapter.nsp.sockets).forEach((k) => {
-    resp += "<br />" + k;
+    let name = socket.adapter.nsp.sockets[k].handshake.session.user.name;
+    let nick = socket.adapter.nsp.sockets[k].handshake.session.user.nick;
+    resp += "<br />" + name + " (" + nick + ")";
   });
   socket.emit('cmd', { args: args, res: resp, success: true });
 };
@@ -87,13 +95,13 @@ let help = (args, socket) => {
   resp += "<br />FMRL V1.0";
   resp += "<br />--------------------------------------------------------";
   resp += "<br />/help";
-  resp += "<br />----Shows this prompt";
-  resp += "<br />/join <channel...>";
-  resp += "<br />----Joins the specified channel";
-  resp += "<br />/nick <nickname>";
-  resp += "<br />----Sets the users nickname to the specified value";
+  resp += "<br />----Shows this prompt<br />";
+  resp += "<br />/join &lt;channel...&gt;";
+  resp += "<br />----Joins the specified channel<br />";
+  resp += "<br />/nick &lt;nickname&gt;";
+  resp += "<br />----Sets the users nickname to the specified value<br />";
   resp += "<br />/list";
-  resp += "<br />----Lists the current users in the room";
+  resp += "<br />----Lists the current users in the room<br />";
   let success = true;
   socket.emit('cmd', { args: args, res: resp, success: success });
 }

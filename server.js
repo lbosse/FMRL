@@ -128,7 +128,7 @@ app.get('/room*', (req, res) => {
   res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
 
   // Log user to console - not logged when back button is pushed
-  console.log(req.session.user);
+  // console.log(req.session.user);
 
   if(req.session.user != undefined) {
     let room = req.params[0];
@@ -152,7 +152,7 @@ app.get('/room*', (req, res) => {
     res.sendFile(__dirname + '/public/room.html');
 
   } else {
-    console.log([req.headers['x-forwarded-proto'], req.get('Host'), req.url].join(''));
+    //console.log([req.headers['x-forwarded-proto'], req.get('Host'), req.url].join(''));
     res.redirect(
       [req.headers['x-forwarded-proto'], req.get('Host'), req.url].join('')
     );

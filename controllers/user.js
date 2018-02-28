@@ -11,21 +11,34 @@ exports.getUserByEmail = function (email) {
 exports.createUser = function (uobj) {
   var newUser = new User(uobj);
   return newUser;
-}
+};
+
+exports.setNick = function (socket, args, resp) {
+  let user = socket.handshake.session.user;
+
+  User.findOneAndUpdate(
+    {email: user.email},
+    { $set: {nick: args[1]}}
+  )
+  .then((item, err) => {
+    socket.handshake.session.user.nick = args[1];
+    socket.emit('cmd', {args: args, res: resp, success: err ? false : true, user: socket.handshake.session.user});
+  });
+};
 
 exports.hashPass = function (userData) {
   var hash = crypto.createHmac('sha512', 'rn59x@4es7q!');
   hash.update(userData.password);
   userData.password = hash.digest('hex');
   return userData;
-}
+};
 
 exports.validPw = function (uobj) {
   var regex = new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})');
   return regex.test(uobj.password);
-}
+};
 
 exports.validEmail = function (uobj) {
   var regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return regex.test(uobj.email);
-}
+};

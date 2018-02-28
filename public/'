@@ -47,6 +47,7 @@ $(function () {
       if(val[0] == '/') {
         socket.emit('cmd', {cmd: val, room: window.location.pathname});
       } else {
+        socket.emit('load', {});
         socket.emit('chat message', {message: val, room: window.location.pathname});
       }
       print(username + ": " + val, 'message');
