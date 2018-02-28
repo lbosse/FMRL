@@ -3,9 +3,9 @@ var crypto    = require('crypto');
 var config    = require('../server.config');
 
 if(process.env.NODE_ENV === 'production') {
-  mongoose.connect(config.db.prod.uri);
+  mongoose.connect(config.mongo.prod.uri);
 } else {
-  mongoose.connect(config.db.dev.uri);
+  mongoose.connect(config.mongo.dev.uri);
 }
 
 var db = mongoose.connection;
