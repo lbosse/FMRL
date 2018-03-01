@@ -14,15 +14,15 @@ exports.createUser = function (uobj) {
 };
 
 exports.setNick = function (socket, args, resp) {
-  let user = socket.handshake.session.user;
+  let user = socket.request.session.user;
 
   User.findOneAndUpdate(
     {email: user.email},
     { $set: {nick: args[1]}}
   )
   .then((item, err) => {
-    socket.handshake.session.user.nick = args[1];
-    socket.emit('cmd', {args: args, res: resp, success: err ? false : true, user: socket.handshake.session.user});
+    socket.request.session.user.nick = args[1];
+    socket.emit('cmd', {args: args, res: resp, success: err ? false : true, user: socket.request.session.user});
   });
 };
 
