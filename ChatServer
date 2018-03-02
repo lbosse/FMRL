@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ $4 == 1 ]; then
+  eval "DEBUG=socket.io:* node server.js $1 $2 $3 $4";
+elif [ $4 == 0 ]; then
+  eval "node server.js $1 $2 $3 $4";
+else
+  echo "INVALID DEBUG LEVEL";
+  echo "USAGE: ChatServer -p <port#> -d <debug-level>";
+fi

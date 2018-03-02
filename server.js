@@ -1,21 +1,52 @@
+// Check for valid command line arguments
+let args = process.argv;
+if (args.length != 6) {
+  console.log('USAGE: ChatServer server.js -p <port#> -d <debug-level>');
+  process.exit();
+} else if (args[2] != '-p' || args[4] != '-d') {
+  console.log('INVALID ARGUMENTS');
+  console.log('USAGE: ChatServer server.js -p <port#> -d <debug-level>');
+  process.exit();
+} else if (isNaN(args[3]) || args[3] < 1024 || args[3] > 65535) {
+  console.log('INVALID PORT NUMBER');
+  console.log('USAGE: ChatServer server.js -p <port#> -d <debug-level>');
+  process.exit();
+} else if (isNaN(args[5]) || args[5] < 0 || args[5] > 1) {
+  console.log('INVALID DEBUG LEVEL');
+  console.log('USAGE: ChatServer server.js -p <port#> -d <debug-level>');
+  process.exit();
+}
+
+// Start setting up server and logging middleware
 const express         = require('express');
 const app             = express();
+const morgan          = require('morgan'); 
+
+// Configure logging
+if (args[5] == 0) {
+  app.use(morgan('dev', {
+    skip: function (req, res) { return res.statusCode < 400 }
+  }));
+} else {
+  process.env['DEBUG'] = 'socket.io:*';
+  app.use(
+    morgan(':method :url :status :response-time ms - :res[content-length]')
+  );
+}
+
+// Set up the rest of the server
 const config          = require('./server.config');
 const bodyParser      = require('body-parser');
 const http            = require('http').Server(app);
 const io              = require('socket.io')(http);
 const uuid            = require('uuid/v4');
 const expSession      = require('express-session');
-const morgan          = require('morgan'); // SETUP NEEDED  
 const redisAdapter    = require('socket.io-redis');
-const redisStore     = require('connect-redis')(expSession);
-
+const redisStore      = require('connect-redis')(expSession);
 const userCont        = require('./controllers/user');
-
 const forceSSL        = require('./util/forceSSL');
 const connection      = require('./util/connection');
-
-const port            = process.env.PORT || process.argv[2] || 3000;
+const port            = process.env.PORT || process.argv[3] || 3000;
 const nsps            = {};
 
 let sessionStore;
@@ -138,7 +169,7 @@ app.get('/room*', (req, res) => {
       return;
     }
 
-    
+
     if(!nsps[room]) {
       nsps[room] = io.of(room);
       nsps[room].on('connection', connection);
@@ -146,13 +177,26 @@ app.get('/room*', (req, res) => {
         session(socket.request, socket.request.res, next);
       });
     }
-    
+
     res.sendFile(__dirname + '/public/room.html');
 
   } else {
     res.redirect(
       [req.headers['x-forwarded-proto'], req.get('Host'), req.url].join('')
     );
+  }
+});
+
+app.post('/nick', (req, res) => {
+  console.log('made it in /nick route');
+  console.log(req.session);
+  console.log(req.session.user);
+  let args = req.body.cmd.split(/[ ,]+/).filter(Boolean);
+  if (args.length == 2) {  
+    req.session.user.nick = args[1];
+    res.send(201);
+  } else {
+    res.send(500);
   }
 });
 

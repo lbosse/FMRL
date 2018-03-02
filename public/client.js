@@ -4,11 +4,11 @@ $(function () {
   );
   let socket = io(room);
   let username = "";
-  
+
   //Handle focusing and clicking functionality for major components
   $('#room').val(room.substr(1));
   $('#m').focus();
-  
+
   $('#room').on('click', function() {
     $(this).select();
   });
@@ -45,6 +45,17 @@ $(function () {
     let val = $('#m').val();
     if(val.length > 0) {
       if(val[0] == '/') {
+        if(val.indexOf('nick') > 0) {
+          let url = '/nick';
+            fetch(url, {
+              method: 'POST', 
+              credentials: 'same-origin',
+              body: JSON.stringify({ cmd: val }) ,
+              headers: new Headers({
+                'Content-Type': 'application/json'
+              })
+            });
+        }
         socket.emit('cmd', {cmd: val, room: window.location.pathname});
       } else {
         socket.emit('chat message', {message: val, room: window.location.pathname});
@@ -55,12 +66,12 @@ $(function () {
     return false;
   });
 
- socket.on('chat message', function(msg) {
-   print(msg, 'info');
- });
+  socket.on('chat message', function(msg) {
+    print(msg, 'info');
+  });
 
- socket.on('cmd', function(cmd) {
-   if(cmd.success) {
+  socket.on('cmd', function(cmd) {
+    if(cmd.success) {
       print(cmd.res, 'system');
       if(cmd.args[0] == '/join') {
         window.location = '/room/'+cmd.channel;
@@ -68,10 +79,10 @@ $(function () {
       if(cmd.user) {
         username = cmd.user.nick ? cmd.user.nick : cmd.user.name;
       }
-   } else {
+    } else {
       print(cmd.res, 'error');
-   }
- });
+    }
+  });
 
 });
 
