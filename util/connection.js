@@ -1,6 +1,10 @@
 const User = require('../controllers/user');
 
 module.exports = function(socket) {
+  if(!socket.adapter.nsp.users) {
+    socket.adapter.nsp.users = [];
+  }
+  socket.adapter.nsp.users.push(socket.request.session.user);
   let user = socket.request.session.user ? socket.request.session.user : {};
   let name = user.nick ? user.nick : user.name;
  
@@ -48,13 +52,21 @@ module.exports = function(socket) {
 
   socket.on('disconnect', () => {
     socket.broadcast.emit('unjoin', name + ' has left the room!');
+    let remove = socket.request.session.user.name;
+    for(let i = 0; i < socket.adapter.nsp.users.length; i++) {
+      let user = socket.adapter.nsp.users[i];
+      if(user.name = remove) {
+        socket.adapter.nsp.users.splice(i, 1);
+        break;
+      }
+    }
   });
 };
 
 let stats = (args, socket) => {
   let username = socket.request.session.user.name;
   let room = "/room"+socket.adapter.nsp.name + "/";
-  let uInRoom = Object.keys(socket.adapter.nsp.sockets).length;
+  let uInRoom = socket.adapter.nsp.users.length;
   let joined = socket.handshake.time;
   let success = false;
   if(uInRoom && joined) {
@@ -118,17 +130,12 @@ let join = (args, socket) => {
 let list = (args, socket, room) => {
   let resp = "<br />Current connections to the room: ";
   let clients = socket.adapter.nsp.server.engine.clients;
-  Object.keys(clients).forEach((k) => {
-    let clientSession = socket.adapter.nsp.server.engine.clients[k].request.session;
-    let name = clientSession.user.name;
-    let nick = clientSession.user.nick;
+  let users = socket.adapter.nsp.users;
+  for(k in users) {
+    let name = users[k].name;
+    let nick = users[k].nick;
     resp += "<br />" + name + " (" + nick + ")";
-  });
-  /*Object.keys(socket.adapter.nsp.sockets).forEach((k) => {
-    let name = socket.adapter.nsp.sockets[k].request.session.user.name;
-    let nick = socket.adapter.nsp.sockets[k].request.session.user.nick;
-    resp += "<br />" + name + " (" + nick + ")";
-  });*/
+  }
   socket.emit('cmd', { args: args, res: resp, success: true });
 };
 
