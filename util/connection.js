@@ -1,10 +1,7 @@
 const User = require('../controllers/user');
 
 module.exports = function(socket) {
-  if(!socket.adapter.nsp.users) {
-    socket.adapter.nsp.users = [];
-  }
-  socket.adapter.nsp.users.push(socket.request.session.user);
+  
   let user = socket.request.session.user ? socket.request.session.user : {};
   let name = user.nick ? user.nick : user.name;
  
@@ -52,38 +49,33 @@ module.exports = function(socket) {
 
   socket.on('disconnect', () => {
     socket.broadcast.emit('unjoin', name + ' has left the room!');
-    let remove = socket.request.session.user.name;
-    for(let i = 0; i < socket.adapter.nsp.users.length; i++) {
-      let user = socket.adapter.nsp.users[i];
-      if(user.name = remove) {
-        socket.adapter.nsp.users.splice(i, 1);
-        break;
-      }
-    }
   });
 };
 
 let stats = (args, socket) => {
-  let username = socket.request.session.user.name;
-  let room = "/room"+socket.adapter.nsp.name + "/";
-  let uInRoom = socket.adapter.nsp.users.length;
-  let joined = socket.handshake.time;
-  let success = false;
-  if(uInRoom && joined) {
-    success = true;
-  }
+  socket.adapter.clients((err, clients) => {
+    
+    let username = socket.request.session.user.name;
+    let room = "/room"+socket.adapter.nsp.name + "/";
+    let uInRoom = clients.length;
+    let joined = socket.handshake.time;
+    let success = false;
+    if(uInRoom && joined) {
+      success = true;
+    }
 
-  let resp = "";
-  resp += "<br />=========================================";
-  resp += "<br />FMRL://"+ username + "/stats" + room;
-  resp += "<br />=========================================";
-  resp += "<br />Joined "+room+": ";
-  resp += "<br />---- " +joined + "<br />";
-  resp += "<br />Users in "+room+": "
-  resp += "<br />---- " + uInRoom + "<br />";
+    let resp = "";
+    resp += "<br />=========================================";
+    resp += "<br />FMRL://"+ username + "/stats" + room;
+    resp += "<br />=========================================";
+    resp += "<br />Joined "+room+": ";
+    resp += "<br />---- " +joined + "<br />";
+    resp += "<br />Users in "+room+": "
+    resp += "<br />---- " + uInRoom + "<br />";
 
-  socket.emit('cmd', { args: args, res: resp, success: success});
+    socket.emit('cmd', { args: args, res: resp, success: success});
 
+  });
 };
 
 let nickname = (args, socket) => {
@@ -129,14 +121,19 @@ let join = (args, socket) => {
 
 let list = (args, socket, room) => {
   let resp = "<br />Current connections to the room: ";
-  let clients = socket.adapter.nsp.server.engine.clients;
+  /*let clients = socket.adapter.nsp.server.engine.clients;
   let users = socket.adapter.nsp.users;
   for(k in users) {
     let name = users[k].name;
     let nick = users[k].nick;
     resp += "<br />" + name + " (" + nick + ")";
-  }
-  socket.emit('cmd', { args: args, res: resp, success: true });
+  }*/
+  socket.adapter.clients((err, clients) => {
+    for(k in clients) {
+      resp += "<br />" + clients[k];
+    }
+    socket.emit('cmd', { args: args, res: resp, success: true });
+  });
 };
 
 let help = (args, socket) => {
