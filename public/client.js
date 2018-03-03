@@ -29,7 +29,7 @@ $(function () {
       username = res.user.nick ? res.user.nick : res.user.name;
       $('.username').text(res.user.name);
     }
-    print('Welcome to FMRL. Type /help for a list of commands.', 'system');
+    socket.emit('cmd', {cmd: '/help',room: window.location.pathname});
   });
 
   socket.on('join', function(msg) {
@@ -56,6 +56,9 @@ $(function () {
               })
             });
         }
+        if(val.indexOf('quit') > 0) {
+          window.location = '/logout';
+        }
         socket.emit('cmd', {cmd: val, room: window.location.pathname});
       } else {
         socket.emit('chat message', {message: val, room: window.location.pathname});
@@ -73,7 +76,7 @@ $(function () {
   socket.on('cmd', function(cmd) {
     if(cmd.success) {
       print(cmd.res, 'system');
-      if(cmd.args[0] == '/join') {
+      if(cmd.args[0] == '/join' || cmd.args[0] == '/leave') {
         window.location = '/room/'+cmd.channel;
       }
       if(cmd.user) {

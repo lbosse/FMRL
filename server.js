@@ -27,7 +27,7 @@ morgan.token('id', function getId (req) {
   return "cluster: " + cluster.worker.id + " - ";
 });
 if (args[5] == 0) {
-  app.use(morgan('dev', {
+  app.use(morgan(':id :method :url :status :response-time ms - :res[content-length]', {
     skip: function (req, res) { return res.statusCode < 400 }
   }));
 } else {
@@ -184,7 +184,7 @@ if(!sticky.listen(http, port)) {
 
         if(!nsps[room]) {
           nsps[room] = io.of(room);
-          nsps[room].on('connection', connection);
+          nsps[room].on('connection', connection.bind({nsps: nsps}));
           nsps[room].use((socket, next) => {
             session(socket.request, socket.request.res, next);
           });

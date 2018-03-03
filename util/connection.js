@@ -1,6 +1,6 @@
 const User = require('../controllers/user');
 
-module.exports = (socket) => {
+module.exports = function(socket) {
 
   let user = socket.request.session.user ? socket.request.session.user : {};
   let name = user.nick ? user.nick : user.name;
@@ -26,7 +26,7 @@ module.exports = (socket) => {
         list(args, socket, msg.room);
         break;
       case '/leave':
-        socket.emit('cmd', {args: args});
+        join(args, socket);
         break;
       case '/quit':
         socket.emit('cmd', {args: args});
@@ -35,7 +35,7 @@ module.exports = (socket) => {
         help(args, socket);
         break;
       case '/stats':
-        socket.emit('cmd', {args: args});
+        stats(args, socket);
         break;
       default:
         socket.emit('cmd', {args: args});
@@ -52,6 +52,29 @@ module.exports = (socket) => {
   });
 };
 
+let stats = (args, socket) => {
+  let username = socket.request.session.user.name;
+  let room = "/room"+socket.adapter.nsp.name + "/";
+  let uInRoom = Object.keys(socket.adapter.nsp.sockets).length;
+  let joined = socket.handshake.time;
+  let success = false;
+  if(uInRoom && joined) {
+    success = true;
+  }
+
+  let resp = "";
+  resp += "<br />=========================================";
+  resp += "<br />FMRL://"+ username + "/stats" + room;
+  resp += "<br />=========================================";
+  resp += "<br />Joined "+room+": ";
+  resp += "<br />---- " +joined + "<br />";
+  resp += "<br />Users in "+room+": "
+  resp += "<br />---- " + uInRoom + "<br />";
+
+  socket.emit('cmd', { args: args, res: resp, success: success});
+
+};
+
 let nickname = (args, socket) => {
   let resp = "";
   if(args.length != 2) {
@@ -63,17 +86,32 @@ let nickname = (args, socket) => {
   }
 }
 
+
 let join = (args, socket) => {
   let resp = "";
   let success = false;
   let channel = "";
   if(args.length < 2) {
-    resp += "invalid args! try /join [&lt;channel&gt; ...]";
+    if(args[0] == '/leave') {
+      channel = socket.request.session.uuid;
+      resp += "Joining channel "+channel+"...";
+      success = true;
+    } else {
+      resp += "invalid args! try /join [&lt;channel&gt; ...]";
+      success = false;
+    }
   } else {
-    channel = args.slice(1, args.length).join('_');
-    resp += "Joining channel "+channel+"...";
-    success = true;
+      if(args[0] == '/leave') {
+        channel = socket.request.session.uuid;
+        resp += "Joining channel "+channel+"...";
+        success = true;
+      } else {
+        success = true;
+        channel = args.slice(1, args.length).join('_');
+        resp += "Joining channel "+channel+"...";
+      }
   }
+
   socket.emit('cmd', { args: args, res: resp, success: success, channel: channel });
   
 };
@@ -90,17 +128,25 @@ let list = (args, socket, room) => {
 
 let help = (args, socket) => {
   let resp = "";
-  resp  = "<br />--------------------------------------------------------";
-  resp += "<br />FMRL V1.0";
-  resp += "<br />--------------------------------------------------------";
+  resp += "<br />=========================================";
+  resp += "<br />FMRL://help/V1.0";
+  resp += "<br />=========================================";
+  resp += "<br />User commands:";
+  resp += "<br />-----------------------------------------";
   resp += "<br />/help";
-  resp += "<br />----Shows this prompt<br />";
+  resp += "<br />---- Shows this prompt<br />";
   resp += "<br />/join &lt;channel...&gt;";
-  resp += "<br />----Joins the specified channel<br />";
+  resp += "<br />---- Joins the specified channel<br />";
+  resp += "<br />/leave";
+  resp += "<br />---- Leaves current room <br />";
   resp += "<br />/nick &lt;nickname&gt;";
-  resp += "<br />----Sets the users nickname to the specified value<br />";
+  resp += "<br />---- Sets your current nickname<br />";
   resp += "<br />/list";
-  resp += "<br />----Lists the current users in the room<br />";
+  resp += "<br />---- Lists the users in the room<br />";
+  resp += "<br />/stats";
+  resp += "<br />---- Displays stats about the user<br />";
+  resp += "<br />/quit";
+  resp += "<br />---- Logs out and destroys user session<br />";
   let success = true;
   socket.emit('cmd', { args: args, res: resp, success: success });
 }
