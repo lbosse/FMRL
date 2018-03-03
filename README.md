@@ -36,6 +36,11 @@ To run MongoDB and Redis, simply enter the following commands in your terminal:
 5. Run the chat server using the following command: `./ChatServer -p <port#> -d <debug-level>`
 6. Navigate to **https://localhost:<port#>** in your browser to log in and connect to the server.
 
+## Testing the Application
+1. Navigate to https://localhost:<port#> in your browser to log in and connect to the server.
+2. Once you're logged in, open up your browser's JavaScript console (on Chrome and Firefox, you can do this by right-clicking and selecting "Inspect Element" to open the developer console, and clicking on the "Console" tool).
+3. Once you've got your JavaScript console open, navigate to https://localhost:<port#>/test. This will load the testing script and you will see the test results in your console.
+
 ## Observation and Reflection
 Most of the project was written using a paired programming style over the course of several gatherings in the CS building. When programming individually Jake focused on the front end / user experience, and connecting the front end components to the backend socket handling. Luke, in turn, focused on login/register/logout functionality, storing information about the user, command interaction with the database, and testing. Most of the paired programming was used to develop the socket portion of the back end.
 
