@@ -1,7 +1,6 @@
 const User = require('../controllers/user');
 
 module.exports = function(socket) {
-
   let user = socket.request.session.user ? socket.request.session.user : {};
   let name = user.nick ? user.nick : user.name;
  
@@ -118,11 +117,18 @@ let join = (args, socket) => {
 
 let list = (args, socket, room) => {
   let resp = "<br />Current connections to the room: ";
-  Object.keys(socket.adapter.nsp.sockets).forEach((k) => {
+  let clients = socket.adapter.nsp.server.engine.clients;
+  Object.keys(clients).forEach((k) => {
+    let clientSession = socket.adapter.nsp.server.engine.clients[k].request.session;
+    let name = clientSession.user.name;
+    let nick = clientSession.user.nick;
+    resp += "<br />" + name + " (" + nick + ")";
+  });
+  /*Object.keys(socket.adapter.nsp.sockets).forEach((k) => {
     let name = socket.adapter.nsp.sockets[k].request.session.user.name;
     let nick = socket.adapter.nsp.sockets[k].request.session.user.nick;
     resp += "<br />" + name + " (" + nick + ")";
-  });
+  });*/
   socket.emit('cmd', { args: args, res: resp, success: true });
 };
 
