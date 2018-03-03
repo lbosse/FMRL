@@ -5,6 +5,7 @@
 
 ## Distributed Socket.io chat server
 *An example of a distributed chat system using Socket.io and Redis.*  
+[**Demonstration Video**](https://drive.google.com/file/d/1akkSF3vBnWc_n9rnzwFKzVVnhYC5QkaG/view?usp=sharing)
 
 ## Installing Dependencies
 **Note: Running the server requires that your MongoDB and Redis instances are already running. See the instructions below for directions on how to install and run MongoDB and Redis:
