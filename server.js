@@ -217,6 +217,10 @@ if(!sticky.listen(http, port)) {
       res.redirect('/');
     });
 
+    app.get('/test', (req, res) => {
+      res.sendFile(__dirname + '/public/test.html');
+    });
+
     app.use(express.static('public'));
 
     //Handle sockets on empty room
